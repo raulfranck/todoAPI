@@ -16,7 +16,7 @@ function checksExistsUserAccount(request, response, next) {
   const user = users.find(user => user.username === username);
 
   if (!user) {
-    return response.status(400).json({error: "Usuário não encontrado"})
+    return response.status(404).json({error: 'Usuário não encontrado'})
   } 
 
   request.user = user;
@@ -30,16 +30,19 @@ app.post('/users', (request, response) => {
   const usersAlradyExists = users.some((user) => user.username === username)
 
   if (usersAlradyExists) {
-    return response.status(400).json({error: "Usuário já foi criado"})
+    return response.status(400).json({error: "User not found"})
   }
-  users.push({
+
+  const user = {
     id: uuidv4(),
     name,
     username,
     todos: []
-  });
+  };
 
-  return response.status(201).json(users);
+  users.push(user);
+
+  return response.status(201).json(user);
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
@@ -78,7 +81,7 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   todoVerify.title = title;
   todoVerify.deadline = new Date(deadline);
 
-  return response.status(201).json(user)
+  return response.json(todoVerify)
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
@@ -93,11 +96,22 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
 
   todoVerify.done = true;
 
-  return response.status(201).json(user)
+  return response.json(todoVerify)
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+
+  const todoIndexVerify = user.todos.findIndex(todo => todo.id === id)
+
+  if (todoIndexVerify === -1) {
+    return response.status(404).json({error: 'Todo não encontrado'})
+  }
+
+  user.todos.splice(todoIndexVerify, 1)
+
+  return response.status(204).send();
 });
 
 module.exports = app;
