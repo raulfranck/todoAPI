@@ -32,26 +32,36 @@ app.post('/users', (request, response) => {
   if (usersAlradyExists) {
     return response.status(400).json({error: "Usuário já existe!"})
   }
-
   users.push({
+    id: uuidv4(),
     name,
     username,
-    id: uuidv4(),
     todos: []
   });
 
-  console.log(users)
-  return response.status(201).send();
+  return response.status(201).json(users);
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request;
-  console.log(user)
   return response.json(user.todos)
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { title, deadline } = request.body;
+  const { user } = request;
+
+  const todoOperation = {
+    id: uuidv4(),
+	  title,
+	  done: false, 
+	  deadline: new Date(deadline),
+	  created_at: new Date()
+  }
+
+  user.todos.push(todoOperation);
+
+  return response.status(201).json(todoOperation)
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
